@@ -8,27 +8,37 @@
 		</style>
 	</head>
 	<body>
-		<select id="type">
-			<option value="0">8bit int</option>
-			<option value="1" selected>16bit int</option>
-			<option value="2">32bit float</option>
-		</select><br>
-		<input id="formula" type="text" value="t"><br>
-		<input id="sec" type="text" value="5"><br>
+		1, Select the wav file you want to process<br>
 		<input id="input" type="file"> <a href="./saw.wav">This is useful saw wave file !</a><br>
+		<br>
+		2, Select the depth of wav you select ( generally Int16 )<br>
+		<select id="depth">
+			<option value="0">Int8</option>
+			<option value="1" selected>Int16</option>
+			<option value="2">Float32</option>
+		</select><br>
+		<br>
+		3, Input the formula ( example is below )<br>
+		<input id="formula" type="text" value="t"><br>
+		<br>
+		4, Input the length of output file<br>
+		<input id="sec" type="text" value="5"> sec<br>
+		<br>
+		5, Go !! ( if you want to check your formula, press "Test" )<br>
 		<input id="go" type="button" value="Go" onclick="go()">
 		<input id="test" type="button" value="Test" onclick="test()"><br>
-		<div id="processing" style="visibility:hidden">Processing</div><br>
+		<div id="processing" style="visibility:hidden;color:#FF0066">Processing</div><br>
 		<audio id="player" controls autoplay></audio><br>
 		<a id="link">Download</a><br>
 		<br>
-		+,-,*,**,/,%,&,|,^,>>,<<,abs,sin,cos,tan,rnd<br>
+		+,-,*,**,/,%,&,|,^,>>,<<,<,>,<=,>=,==,!=,min,max,abs,sin,cos,tan,exp,rnd<br>
 		<br>
-		Example<br>
 		Init : t<br>
 		FWD 2x : t,2,*<br>
 		Reverse : t,-1,*<br>
-		FM : t,3000,/,sin,1000,*,t,+<br>
+		FM : t,3E3,/,sin,1E3,*,t,+<br>
+		Stretch : t,t,12,>>,11,<<,-<br>
+		Stop : 1E5,t,-1E-5,*,exp,1E5,*,-<br>
 		The 42 Melody : t,13,>>,42,&,t,3,>>,*<br>
 		<script>
 			function setBin(_v,_o,_c,_a)
@@ -60,12 +70,21 @@
 						case "^":f[c-2]=Math.floor(f[c-2])^Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
 						case "<<":f[c-2]=Math.floor(f[c-2])<<Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
 						case ">>":f[c-2]=Math.floor(f[c-2])>>Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "<":f[c-2]=f[c-2]<f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case ">":f[c-2]=f[c-2]>f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "<=":f[c-2]=f[c-2]<=f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case ">=":f[c-2]=f[c-2]>=f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "==":f[c-2]=f[c-2]==f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "!=":f[c-2]=f[c-2]!=f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "min":f[c-2]=Math.min(f[c-2],f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "max":f[c-2]=Math.max(f[c-2],f[c-1]);f.splice(c-1,2);c-=2;break;
 						case "abs":f[c-1]=Math.abs(f[c-1]);f.splice(c,1);c--;break;
 						case "sin":f[c-1]=Math.sin(f[c-1]);f.splice(c,1);c--;break;
 						case "cos":f[c-1]=Math.cos(f[c-1]);f.splice(c,1);c--;break;
 						case "tan":f[c-1]=Math.tan(f[c-1]);f.splice(c,1);c--;break;
+						case "exp":f[c-1]=Math.exp(f[c-1]);f.splice(c,1);c--;break;
 						case "rnd":f[c]=Math.random();break;
-						default:f[c]=Number(f[c]);
+						default:f[c]=Number(f[c]);break;
 					}
 				}
 				return f[f.length-1];
@@ -73,15 +92,16 @@
 
 			function test()
 			{
-				alert(interpret(document.getElementById("formula").value,0)+" ( When t=0 )");
+				alert(interpret(document.getElementById("formula").value,0)+"\n( When t=0 )");
 			}
 
 			function go()
 			{
-				document.getElementById("processing").style.visibility="visible";
-
 				var f=document.getElementById("input").files[0];
-				var type=document.getElementById("type").value;
+				if(!f){alert("OUCH! Select the wav file you want to process");return;}
+				var depth=document.getElementById("depth").value;
+
+				document.getElementById("processing").style.visibility="visible";
 
 				var reader=new FileReader();
 				reader.onload=function(_i)
@@ -124,33 +144,29 @@
 
 					for(var t=0;t<outSize/2;t++)
 					{
-						var r=Math.floor(interpret(document.getElementById("formula").value,t));
+						var r=Math.floor(interpret(document.getElementById("formula").value,t)),p,s;
 
-						if(type==0)
+						if(depth==0)
 						{
-							var p=Math.abs((r)%size);
-							var s=v.getUint8(44+p,true);
+							p=(r)%size;
+							p=(p+size)%size;
+							s=v.getUint8(44+p,true);
 							s=(s-128)*256;
-							o.setInt16(44+t*2,s,true);
 						}
-						if(type==1)
+						if(depth==1)
 						{
-							var p=Math.abs((r*2)%size);
-							var s=v.getInt16(44+p,true);
-							o.setInt16(44+t*2,s,true);
+							p=(r*2)%size;
+							p=(p+size)%size;
+							s=v.getInt16(44+p,true);
 						}
-						if(type==2)
+						if(depth==2)
 						{
-							var p=Math.abs((r*4)%size);
-							var s=v.getFloat32(44+p,true);
+							p=(r*4)%size;
+							p=(p+size)%size;
+							s=v.getFloat32(44+p,true);
 							s=Math.floor(Math.max(Math.min(s,1),-1)*128*256);
-							o.setInt16(44+t*2,s,true);
 						}
-
-						if(t%10000==0)
-						{
-							console.log(t/(outSize/2)+" : "+r);
-						}
+						o.setInt16(44+t*2,s,true);
 					}
 
 					var blob=new Blob([o],{"type":"application/x-msdownload"});
