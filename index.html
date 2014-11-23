@@ -144,7 +144,7 @@
 
 					for(var t=0;t<outSize/2;t++)
 					{
-						var r=Math.floor(interpret(document.getElementById("formula").value,t)),p,s;
+						var r=Math.floor(interpret(document.getElementById("formula").value,t)/2)*2+t%2,p,s;
 
 						if(depth==0)
 						{
