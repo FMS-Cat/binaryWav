@@ -4,34 +4,109 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>binary</title>
+		<link href='http://fonts.googleapis.com/css?family=Nova+Mono|Indie+Flower' rel='stylesheet' type='text/css'>
 		<style type="text/css">
+			*
+			{
+				text-align:center;
+				background:#222222;
+				color:#EEEEEE;
+				font-family:'Indie Flower',cursive;
+			}
+
+			a
+			{
+				color:#88FFAA;
+				font-weight:bold;
+			}
+
+			.d
+			{
+				transform:rotate(-1deg);
+				background:#00FF66;
+				color:#000000;
+				padding:0px 8px;
+				width:240px;
+				font-weight:bold;
+				margin:auto;
+			}
+
+			.i
+			{
+				border:0;
+				background:#444444;
+				padding:0 8px;
+				font-family:'Nova Mono';
+			}
+
+			#input
+			{
+				font-family:'Nova Mono';
+			}
+
+			#depth
+			{
+				padding:0 4px;
+				font-size:24px;
+			}
+
+			#formula
+			{
+				text-align:left;
+				font-size:48px;
+			}
+
+			#sec
+			{
+				text-align:right;
+				font-size:36px;
+				width:80px;
+			}
+
+			#go
+			{
+				font-size:24px;
+			}
+
+			#test
+			{
+				font-size:24px;
+			}
+
+			#processing
+			{
+				font-size:24px;
+				font-weight:bold;
+				color:#FF0066;
+			}
 		</style>
 	</head>
 	<body>
-		1, Select the wav file you want to process<br>
-		<input id="input" type="file"> <a href="./saw.wav">This is useful saw wave file !</a><br>
+		<div class="d">1, Select the wav file you want to process</div><br>
+		<input id="input" type="file"><br>
+		<a href="./saw.wav">This is useful saw wave file !</a><br>
 		<br>
-		2, Select the depth of wav you select ( generally Int16 )<br>
-		<select id="depth">
+		<div class="d">2, Select the depth of wav you select ( generally Int16 )</div><br>
+		<select id="depth" class="i">
 			<option value="0">Int8</option>
 			<option value="1" selected>Int16</option>
 			<option value="2">Float32</option>
 		</select><br>
 		<br>
-		3, Input the formula ( example is below )<br>
-		<input id="formula" type="text" value="t"><br>
+		<div class="d">3, Input the formula ( example is below )</div><br>
+		<input id="formula" type="text" value="t" class="i"><br>
 		<br>
-		4, Input the length of output file<br>
-		<input id="sec" type="text" value="5"> sec<br>
+		<div class="d">4, Input the length of output file</div><br>
+		<input id="sec" type="text" value="5" class="i"> sec<br>
 		<br>
-		5, Go !! ( if you want to check your formula, press "Test" )<br>
-		<input id="go" type="button" value="Go" onclick="go()">
-		<input id="test" type="button" value="Test" onclick="test()"><br>
-		<div id="processing" style="visibility:hidden;color:#FF0066">Processing</div><br>
+		<div class="d">5, <span class="d" style="font-size:36px">Go !!</span> ( if you want to check your formula, press "Test" )</div><br>
+		<input id="go" type="button" value="Go" onclick="go()" class="i">
+		<input id="test" type="button" value="Test" onclick="test()" class="i"><br>
+		<div id="processing" style="visibility:hidden;">Processing</div><br>
 		<audio id="player" controls autoplay></audio><br>
 		<a id="link">Download</a><br>
 		<br>
-		+,-,*,**,/,%,&,|,^,>>,<<,<,>,<=,>=,==,!=,min,max,abs,sin,cos,tan,exp,rnd<br>
+		+,-,*,**,/,%,&,|,^,>>,<<,<,>,<=,>=,==,!=,min,max,abs,sin,cos,tan,exp,rnd,set,get<br>
 		<br>
 		Init : t<br>
 		FWD 2x : t,2,*<br>
@@ -53,7 +128,9 @@
 
 			function interpret(_f,_t)
 			{
-				f=_f.split(",");
+				var f=_f.split(",");
+				var s=0;
+				if(_t==0)console.log(f);
 				for(var c=0;c<f.length;c++)
 				{
 					switch(f[c])
@@ -64,7 +141,7 @@
 						case "*":f[c-2]=f[c-2]*f[c-1];f.splice(c-1,2);c-=2;break;
 						case "**":f[c-2]=Math.pow(f[c-2],f[c-1]);f.splice(c-1,2);c-=2;break;
 						case "/":f[c-2]=f[c-2]/f[c-1];f.splice(c-1,2);c-=2;break;
-						case "%":f[c-2]=Math.abs(f[c-2]%f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "%":f[c-2]=(f[c-2]%f[c-1]+f[c-1])%f[c-1];f.splice(c-1,2);c-=2;break;
 						case "&":f[c-2]=Math.floor(f[c-2])&Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
 						case "|":f[c-2]=Math.floor(f[c-2])|Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
 						case "^":f[c-2]=Math.floor(f[c-2])^Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
@@ -84,8 +161,12 @@
 						case "tan":f[c-1]=Math.tan(f[c-1]);f.splice(c,1);c--;break;
 						case "exp":f[c-1]=Math.exp(f[c-1]);f.splice(c,1);c--;break;
 						case "rnd":f[c]=Math.random();break;
+						case "dup":f[c]=f[c-1];break;
+						case "set":s=f[c-1];f.splice(c,1);c--;break;
+						case "get":f[c]=s;break;
 						default:f[c]=Number(f[c]);break;
 					}
+					if(_t==0)console.log(f);
 				}
 				return f[f.length-1];
 			}
@@ -144,25 +225,22 @@
 
 					for(var t=0;t<outSize/2;t++)
 					{
-						var r=Math.floor(interpret(document.getElementById("formula").value,t)/2)*2+t%2,p,s;
+						var r=Math.floor(interpret(document.getElementById("formula").value,Math.floor(t/2)))*2+t%2,p,s;
 
 						if(depth==0)
 						{
-							p=(r)%size;
-							p=(p+size)%size;
+							p=((r)%size+size)%size;
 							s=v.getUint8(44+p,true);
 							s=(s-128)*256;
 						}
 						if(depth==1)
 						{
-							p=(r*2)%size;
-							p=(p+size)%size;
+							p=((r*2)%size+size)%size;
 							s=v.getInt16(44+p,true);
 						}
 						if(depth==2)
 						{
-							p=(r*4)%size;
-							p=(p+size)%size;
+							p=((r*4)%size+size)%size;
 							s=v.getFloat32(44+p,true);
 							s=Math.floor(Math.max(Math.min(s,1),-1)*128*256);
 						}
