@@ -210,7 +210,7 @@
 					}
 
 					var size=v.getUint8(data+4)+256*(v.getUint8(data+5)+256*(v.getUint8(data+6)+256*(v.getUint8(data+7))));
-					var outSize=44100*2*2*document.getElementById("sec").value;
+					var outSize=Math.floor(44100*document.getElementById("sec").value)*2*2;
 
 					var out=new ArrayBuffer(44+outSize);
 					var o=new DataView(out);
