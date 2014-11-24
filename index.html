@@ -106,7 +106,7 @@
 		<audio id="player" controls autoplay></audio><br>
 		<a id="link">Download</a><br>
 		<br>
-		+,-,*,**,/,%,&,|,^,>>,<<,<,>,<=,>=,==,!=,min,max,abs,sin,cos,tan,exp,rnd,set,get<br>
+		+,-,*,**,/,%,&,|,^,>>,<<,<,>,<=,>=,==,!=,min,max,abs,sin,cos,tan,exp,rnd,>x,x,>y,y,>z,z,>w,w<br>
 		<br>
 		Init : t<br>
 		FWD 2x : t,2,*<br>
@@ -129,7 +129,7 @@
 			function interpret(_f,_t)
 			{
 				var f=_f.split(",");
-				var s=0;
+				var x=0,y=0,z=0,w=0;
 				if(_t==0)console.log(f);
 				for(var c=0;c<f.length;c++)
 				{
@@ -162,8 +162,14 @@
 						case "exp":f[c-1]=Math.exp(f[c-1]);f.splice(c,1);c--;break;
 						case "rnd":f[c]=Math.random();break;
 						case "dup":f[c]=f[c-1];break;
-						case "set":s=f[c-1];f.splice(c,1);c--;break;
-						case "get":f[c]=s;break;
+						case ">x":x=f[c-1];f.splice(c,1);c--;break;
+						case "x":f[c]=x;break;
+						case ">y":y=f[c-1];f.splice(c,1);c--;break;
+						case "y":f[c]=y;break;
+						case ">z":z=f[c-1];f.splice(c,1);c--;break;
+						case "z":f[c]=z;break;
+						case ">w":w=f[c-1];f.splice(c,1);c--;break;
+						case "w":f[c]=w;break;
 						default:f[c]=Number(f[c]);break;
 					}
 					if(_t==0)console.log(f);
