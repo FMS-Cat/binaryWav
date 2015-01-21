@@ -36,12 +36,12 @@
 				border:0;
 				background:#444444;
 				padding:0 8px;
-				font-family:'Ubuntu Mono',monospace;
+				font-family:'Ubuntu Mono';
 			}
 
 			#input
 			{
-				font-family:'Ubuntu Mono',monospace;
+				font-family:'Ubuntu Mono';
 			}
 
 			#depth
@@ -126,6 +126,57 @@
 				}
 			}
 
+			function interpret(_f,_t)
+			{
+				var f=_f.split(",");
+				var x=0,y=0,z=0,w=0;
+				if(_t==0)console.log(f);
+				for(var c=0;c<f.length;c++)
+				{
+					switch(f[c])
+					{
+						case "t":f[c]=_t;break;
+						case "+":f[c-2]=f[c-2]+f[c-1];f.splice(c-1,2);c-=2;break;
+						case "-":f[c-2]=f[c-2]-f[c-1];f.splice(c-1,2);c-=2;break;
+						case "*":f[c-2]=f[c-2]*f[c-1];f.splice(c-1,2);c-=2;break;
+						case "**":f[c-2]=Math.pow(f[c-2],f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "/":f[c-2]=f[c-2]/f[c-1];f.splice(c-1,2);c-=2;break;
+						case "%":f[c-2]=(f[c-2]%f[c-1]+f[c-1])%f[c-1];f.splice(c-1,2);c-=2;break;
+						case "&":f[c-2]=Math.floor(f[c-2])&Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "|":f[c-2]=Math.floor(f[c-2])|Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "^":f[c-2]=Math.floor(f[c-2])^Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "<<":f[c-2]=Math.floor(f[c-2])<<Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
+						case ">>":f[c-2]=Math.floor(f[c-2])>>Math.floor(f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "<":f[c-2]=f[c-2]<f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case ">":f[c-2]=f[c-2]>f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "<=":f[c-2]=f[c-2]<=f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case ">=":f[c-2]=f[c-2]>=f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "==":f[c-2]=f[c-2]==f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "!=":f[c-2]=f[c-2]!=f[c-1]?1:0;f.splice(c-1,2);c-=2;break;
+						case "min":f[c-2]=Math.min(f[c-2],f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "max":f[c-2]=Math.max(f[c-2],f[c-1]);f.splice(c-1,2);c-=2;break;
+						case "abs":f[c-1]=Math.abs(f[c-1]);f.splice(c,1);c--;break;
+						case "sin":f[c-1]=Math.sin(f[c-1]);f.splice(c,1);c--;break;
+						case "cos":f[c-1]=Math.cos(f[c-1]);f.splice(c,1);c--;break;
+						case "tan":f[c-1]=Math.tan(f[c-1]);f.splice(c,1);c--;break;
+						case "exp":f[c-1]=Math.exp(f[c-1]);f.splice(c,1);c--;break;
+						case "rnd":f[c]=Math.random();break;
+						case "dup":f[c]=f[c-1];break;
+						case ">x":x=f[c-1];f.splice(c,1);c--;break;
+						case "x":f[c]=x;break;
+						case ">y":y=f[c-1];f.splice(c,1);c--;break;
+						case "y":f[c]=y;break;
+						case ">z":z=f[c-1];f.splice(c,1);c--;break;
+						case "z":f[c]=z;break;
+						case ">w":w=f[c-1];f.splice(c,1);c--;break;
+						case "w":f[c]=w;break;
+						default:f[c]=Number(f[c]);break;
+					}
+					if(_t==0)console.log(f);
+				}
+				return f[f.length-1];
+			}
+
 			function test()
 			{
 				alert(interpret(document.getElementById("formula").value,0)+"\n( When t=0 )");
@@ -133,8 +184,8 @@
 
 			function go()
 			{
-				var file=document.getElementById("input").files[0];
-				if(!file){alert("OUCH! Select the wav file you want to process");return;}
+				var f=document.getElementById("input").files[0];
+				if(!f){alert("OUCH! Select the wav file you want to process");return;}
 				var depth=document.getElementById("depth").value;
 
 				document.getElementById("processing").style.visibility="visible";
@@ -178,16 +229,9 @@
 					o.setUint8(36,0x64);o.setUint8(37,0x61);o.setUint8(38,0x74);o.setUint8(39,0x61); // "data"
 					setBin(outSize,40,4,o); // wave size
 
-					eval('\
-						var func = function(t){\
-							with(Math){\
-								return '+document.getElementById("formula").value+';\
-							}\
-						}');
-
 					for(var t=0;t<outSize/2;t++)
 					{
-						var r=Math.floor(func(Math.floor(t/2)))*2+t%2,p,s;
+						var r=Math.floor(interpret(document.getElementById("formula").value,Math.floor(t/2)))*2+t%2,p,s;
 
 						if(depth==0)
 						{
@@ -218,7 +262,7 @@
 
 					document.getElementById("processing").style.visibility="hidden";
 				}
-				reader.readAsArrayBuffer(file);
+				reader.readAsArrayBuffer(f);
 			}
 		</script>
 	</body>
